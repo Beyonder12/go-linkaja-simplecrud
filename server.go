@@ -10,14 +10,15 @@ import (
 
 //struct for account
 type Accounts struct {
+	ID            int    `json:"id"`
 	AccountNumber int    `json:"account_number"`
-	CustomerName  string `json:"customer_number"`
+	CustomerName  string `json:"customer_name"`
 	Balance       int    `json:"balance"`
 }
 
 //receiver function
 func (Accounts) TableName() string {
-	return "users"
+	return "accounts"
 }
 
 func main() {
@@ -42,4 +43,22 @@ func main() {
 
 		return c.JSON(http.StatusOK, response)
 	})
+
+	route.GET("account/get_accounts", func(c echo.Context) error {
+
+		var accounts []Accounts
+		db.Find(&accounts)
+
+		response := struct {
+			Message string
+			Data    []Accounts
+		}{
+			Message: "Successfully fetch all account's data",
+			Data:    accounts,
+		}
+
+		return c.JSON(http.StatusOK, response)
+	})
+
+	route.Start(":9999")
 }
