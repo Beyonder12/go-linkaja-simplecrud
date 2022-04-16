@@ -26,9 +26,33 @@ type AccountResponseDto struct {
 func main() {
 	route := echo.New()
 	db := db.Init()
+
+	customerService := service.CustomerService{
+		Db: db,
+	}
+	
 	accountService := service.AccountService{
 		DB: db,
 	}
+	
+
+	route.POST("customer/", func(c echo.Context) error {
+		customer := new(model.Customers)
+		c.Bind(customer)
+
+		err := customerService.Create(customer)
+		if err != nil {
+			fmt.Println("Error created")
+			return c.JSON(http.StatusBadRequest, err)
+		}
+		response := struct {
+			Message string
+			Data    model.Customers
+		}{
+			Message: "New customer has been created successfully",
+			Data: *customer
+		}
+	})
 
 	route.POST("account/", func(c echo.Context) error {
 		account := new(model.Accounts)
