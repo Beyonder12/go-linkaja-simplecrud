@@ -9,18 +9,36 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+//struct for customer
+type Customers struct {
+	ID       int      `json:"customer_number"`
+	Name     string   `json:"name"`
+	Accounts Accounts `gorm:"foreignKey:CustomerNumber"`
+}
+
 //struct for account
 type Accounts struct {
-	ID            int    `json:"id"`
-	AccountNumber int    `json:"account_number"`
-	CustomerName  string `json:"customer_name"`
-	Balance       int    `json:"balance"`
+	ID             int `json:"id"`
+	AccountNumber  int `json:"account_number"`
+	CustomerNumber int `json:"customer_number"`
+	Balance        int `json:"balance"`
 }
 
 //struct dto for trasfer
 type TransferDto struct {
 	ToAccountNumber int `json:"to_account_number"`
 	Amount          int `json:"amount"`
+}
+
+type AccountResponseDto struct {
+	AccountNumber int    `json:"account_number"`
+	CustomerName  string `json:"customer_name"`
+	Balance       int    `json:"balance"`
+}
+
+//receiver function
+func (Customers) TableName() string {
+	return "customers"
 }
 
 //receiver function
@@ -53,15 +71,26 @@ func main() {
 
 	route.GET("account/", func(c echo.Context) error {
 
-		var accounts []Accounts
-		db.Find(&accounts)
+		var customers []Customers
+		db.Joins("Accounts").Find(&customers)
+
+		var results []AccountResponseDto
+		for _, cus := range customers {
+			a := AccountResponseDto{
+				AccountNumber: cus.Accounts.AccountNumber,
+				CustomerName:  cus.Name,
+				Balance:       cus.Accounts.Balance,
+			}
+
+			results = append(results, a)
+		}
 
 		response := struct {
 			Message string
-			Data    []Accounts
+			Data    []AccountResponseDto
 		}{
 			Message: "Successfully fetch all account's data",
-			Data:    accounts,
+			Data:    results,
 		}
 
 		return c.JSON(http.StatusOK, response)
