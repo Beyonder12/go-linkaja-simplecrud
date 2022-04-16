@@ -2,27 +2,14 @@ package main
 
 import (
 	"account-service-go-linkaja/db"
+	"account-service-go-linkaja/model"
+	"account-service-go-linkaja/service"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
-
-//struct for customer
-type Customers struct {
-	ID       int      `json:"customer_number"`
-	Name     string   `json:"name"`
-	Accounts Accounts `gorm:"foreignKey:CustomerNumber"`
-}
-
-//struct for account
-type Accounts struct {
-	ID             int `json:"id"`
-	AccountNumber  int `json:"account_number"`
-	CustomerNumber int `json:"customer_number"`
-	Balance        int `json:"balance"`
-}
 
 //struct dto for trasfer
 type TransferDto struct {
@@ -36,31 +23,25 @@ type AccountResponseDto struct {
 	Balance       int    `json:"balance"`
 }
 
-//receiver function
-func (Customers) TableName() string {
-	return "customers"
-}
-
-//receiver function
-func (Accounts) TableName() string {
-	return "accounts"
-}
-
 func main() {
 	route := echo.New()
 	db := db.Init()
+	accountService := service.AccountService{
+		DB: db,
+	}
+
 	route.POST("account/", func(c echo.Context) error {
-		account := new(Accounts)
+		account := new(model.Accounts)
 		c.Bind(account)
 
-		err := db.Create(account).Error
+		err := accountService.Create(account)
 		if err != nil {
 			fmt.Println("Error created")
 			return c.JSON(http.StatusBadRequest, err)
 		}
 		response := struct {
 			Message string
-			Data    Accounts
+			Data    model.Accounts
 		}{
 			Message: "New account has been created successfully",
 			Data:    *account,
@@ -71,7 +52,7 @@ func main() {
 
 	route.GET("account/", func(c echo.Context) error {
 
-		var customers []Customers
+		var customers []model.Customers
 		db.Joins("Accounts").Find(&customers)
 
 		var results []AccountResponseDto
@@ -97,7 +78,7 @@ func main() {
 	})
 
 	route.GET("account/:account_number", func(c echo.Context) error {
-		account := new(Accounts)
+		account := new(model.Accounts)
 		account.AccountNumber, _ = strconv.Atoi(c.Param("account_number"))
 
 		err := db.Where("account_number", account.AccountNumber).First(&account).Error
@@ -107,7 +88,7 @@ func main() {
 		}
 		response := struct {
 			Message string
-			Data    Accounts
+			Data    model.Accounts
 		}{
 			Message: "Succesfully found an account",
 			Data:    *account,
@@ -117,7 +98,7 @@ func main() {
 
 	route.POST("account/:from_account_number/transfer", func(c echo.Context) error {
 		//get fromaccount from param respectively
-		fromAccount := new(Accounts)
+		fromAccount := new(model.Accounts)
 		fromAccount.AccountNumber, _ = strconv.Atoi(c.Param("from_account_number"))
 
 		errFrom := db.Where("account_number = ?", fromAccount.AccountNumber).First(&fromAccount).Error
@@ -130,7 +111,7 @@ func main() {
 		transferDto := new(TransferDto)
 		c.Bind(transferDto)
 
-		var toAccount Accounts
+		var toAccount model.Accounts
 
 		errTo := db.Where("account_number = ?", transferDto.ToAccountNumber).Find(&toAccount).Error
 		if errFrom != nil {
@@ -157,8 +138,8 @@ func main() {
 		// update balance
 		response := struct {
 			Message     string
-			FromAccount Accounts
-			ToAccount   Accounts
+			FromAccount model.Accounts
+			ToAccount   model.Accounts
 		}{
 			Message:     "Transaction success",
 			FromAccount: *fromAccount,
