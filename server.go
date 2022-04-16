@@ -28,13 +28,12 @@ func main() {
 	db := db.Init()
 
 	customerService := service.CustomerService{
-		Db: db,
+		DB: db,
 	}
-	
+
 	accountService := service.AccountService{
 		DB: db,
 	}
-	
 
 	route.POST("customer/", func(c echo.Context) error {
 		customer := new(model.Customers)
@@ -50,8 +49,22 @@ func main() {
 			Data    model.Customers
 		}{
 			Message: "New customer has been created successfully",
-			Data: *customer
+			Data:    *customer,
 		}
+		return c.JSON(http.StatusOK, response)
+	})
+
+	route.GET("customer/", func(c echo.Context) error {
+		var customers []model.Customers
+		db.Find(&customers)
+		response := struct {
+			Message string
+			Data    []model.Customers
+		}{
+			Message: "Succesfully fetching all customer's data",
+			Data:    customers,
+		}
+		return c.JSON(http.StatusOK, response)
 	})
 
 	route.POST("account/", func(c echo.Context) error {
