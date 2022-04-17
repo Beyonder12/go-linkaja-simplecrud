@@ -155,7 +155,10 @@ func main() {
 			fmt.Println("error find account")
 			return c.JSON(http.StatusNotFound, errTo)
 		}
-
+		if fromAccount.Balance-transferDto.Amount < 0 {
+			fmt.Println("Error to transfer, not enough balance")
+			return c.JSON(http.StatusBadRequest, "Not enough balance")
+		}
 		fromAccount.Balance = fromAccount.Balance - transferDto.Amount
 
 		errFrom = db.Save(fromAccount).Error
