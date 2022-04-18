@@ -18,6 +18,10 @@ func getSession() *gorm.DB {
 	DB, error := gorm.Open(postgres.Open(fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", "database", "5432", "postgres", "postgres", "postgres")), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
+	//localhost
+	// DB, error := gorm.Open(postgres.Open(fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", "localhost", "5432", "postgres", "postgres", "postgres")), &gorm.Config{
+	// 	Logger: logger.Default.LogMode(logger.Info),
+	// })
 
 	if error != nil {
 		fmt.Println("error")
