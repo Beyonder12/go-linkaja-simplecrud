@@ -141,7 +141,7 @@ func main() {
 		errFrom := db.Where("account_number = ?", fromAccount.AccountNumber).First(&fromAccount).Error
 		if errFrom != nil {
 			fmt.Println("from account number is not found")
-			return c.JSON(http.StatusNotFound, errFrom)
+			return c.JSON(http.StatusNotFound, "account is not found")
 		}
 
 		// get account using body request toAccountNumber
@@ -151,9 +151,9 @@ func main() {
 		var toAccount model.Accounts
 
 		errTo := db.Where("account_number = ?", transferDto.ToAccountNumber).Find(&toAccount).Error
-		if errFrom != nil {
+		if errTo != nil {
 			fmt.Println("error find account")
-			return c.JSON(http.StatusNotFound, errTo)
+			return c.JSON(http.StatusNotFound, "account is not found")
 		}
 		if fromAccount.Balance-transferDto.Amount < 0 {
 			fmt.Println("Error to transfer, not enough balance")
